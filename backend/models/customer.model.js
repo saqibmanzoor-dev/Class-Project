@@ -23,6 +23,27 @@ const customerSchema = new mongoose.Schema(
       required: [true, "Phone number is required"],
       trim: true,
     },
+    cart: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          min: [1, "Quantity must be at least 1"],
+          default: 1,
+        },
+      },
+    ],
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
     createdAt: {
       type: Date,
       default: Date.now,

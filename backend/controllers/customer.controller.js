@@ -68,9 +68,13 @@ const registerCustomer = async (req, res) => {
     });
 
     // 6. Return success response (excluding password)
+    const token = generateToken(newCustomer._id);
+    res.cookie("token", token, cookieOptions);
+
     return res.status(201).json({
       success: true,
       message: "Customer registered successfully",
+      token,
       customer: {
         _id: newCustomer._id,
         fullName: newCustomer.fullName,
@@ -137,10 +141,11 @@ const loginCustomer = async (req, res) => {
     // 5. Store JWT inside HttpOnly cookie
     res.cookie("token", token, cookieOptions);
 
-    // 6. Return success response with customer info (excluding password)
+    // 6. Return success response with customer info (excluding password) and token
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token,
       customer: {
         _id: customer._id,
         fullName: customer.fullName,

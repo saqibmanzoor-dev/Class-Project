@@ -5,6 +5,9 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
 const customerRoutes = require("./routes/customer.routes");
+const productRoutes = require("./routes/product.routes");
+const cartRoutes = require("./routes/cart.routes");
+const orderRoutes = require("./routes/order.routes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,16 +31,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Request logger
+app.use((req, res, next) => {
+  console.log(`📡 [${req.method}] ${req.originalUrl}`);
+  next();
+});
+
 // 2. Health check route
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "ShopKart Customer Authentication API is running 🚀",
+    message: "ShopKart API is running 🚀",
   });
 });
 
-// 3. Mount Customer API Routes
+// 3. Mount API Routes
 app.use("/customers", customerRoutes);
+app.use("/products", productRoutes);
+app.use("/cart", cartRoutes);
+app.use("/orders", orderRoutes);
 
 // 4. 404 Route Handler
 app.use((req, res) => {

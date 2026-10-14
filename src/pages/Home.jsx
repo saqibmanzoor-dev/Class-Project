@@ -1,47 +1,93 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  User, Mail, Phone, ShieldCheck, Sparkles, 
-  ShoppingBag, Package, Heart, Clock, ArrowRight,
-  ExternalLink
+  ShoppingBag, Search, Sparkles, Filter, 
+  Check, ArrowRight, ShieldCheck, Truck, RefreshCw
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { getProfile } from '../services/api';
+import { getProfile, getProducts } from '../services/api';
+import { useCart } from '../context/CartContext';
 
 export default function Home({ user, setUser }) {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const { addItem } = useCart();
 
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [addingId, setAddingId] = useState(null);
+  const [addedNotice, setAddedNotice] = useState(null);
+
+  const categories = ['All', 'Electronics', 'Fashion', 'Books', 'Home'];
+
+  // 1. Verify Authentication
   useEffect(() => {
     let isMounted = true;
-
     const fetchCustomerProfile = async () => {
       try {
-        // Task 3 Requirement: Fetch /customers/me to verify authentication
         const profileData = await getProfile();
         if (isMounted) {
           setUser(profileData);
           setLoading(false);
         }
       } catch (err) {
-        console.warn('Unauthorized or failed to fetch profile, redirecting to /login:', err);
+        console.warn('Unauthorized session, redirecting to /login:', err);
         if (isMounted) {
           setUser(null);
-          // Requirement: "If Not Logged In: Automatically redirect to /login"
           navigate('/login', { replace: true });
         }
       }
     };
 
     fetchCustomerProfile();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [navigate, setUser]);
 
-  const handleLogoutSuccess = () => {
-    setUser(null);
+  // 2. Fetch Products
+  useEffect(() => {
+    let isMounted = true;
+    const fetchCatalog = async () => {
+      try {
+        setLoadingProducts(true);
+        const params = {};
+        if (selectedCategory !== 'All') {
+          params.category = selectedCategory;
+        }
+        if (searchQuery.trim()) {
+          params.search = searchQuery.trim();
+        }
+        const data = await getProducts(params);
+        if (isMounted && data.success) {
+          setProducts(data.products || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch catalog:', err);
+      } finally {
+        if (isMounted) setLoadingProducts(false);
+      }
+    };
+
+    if (user) {
+      fetchCatalog();
+    }
+    return () => { isMounted = false; };
+  }, [user, selectedCategory, searchQuery]);
+
+  const handleAddToCart = async (product) => {
+    try {
+      setAddingId(product._id);
+      const res = await addItem(product._id, 1);
+      if (res.success) {
+        setAddedNotice(`Added "${product.name}" to cart!`);
+        setTimeout(() => setAddedNotice(null), 3000);
+      } else {
+        alert(res.message || 'Could not add to cart');
+      }
+    } finally {
+      setAddingId(null);
+    }
   };
 
   if (loading) {
@@ -55,198 +101,213 @@ export default function Home({ user, setUser }) {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  // Curated showcase products to make the e-commerce home page feel real & premium
-  const sampleProducts = [
-    {
-      id: 1,
-      title: 'Aura Studio Wireless ANC Headphones',
-      category: 'Audio & Tech',
-      price: '$199.00',
-      badge: 'Bestseller',
-    },
-    {
-      id: 2,
-      title: 'Minimalist Chrono Series Watch',
-      category: 'Accessories',
-      price: '$149.50',
-      badge: 'Trending',
-    },
-    {
-      id: 3,
-      title: 'Ergonomic Mechanical Keyboard',
-      category: 'Computing',
-      price: '$129.00',
-      badge: 'New Arrival',
-    },
-    {
-      id: 4,
-      title: 'Ultra-lightweight Running Trainers',
-      category: 'Footwear',
-      price: '$89.99',
-      badge: 'Popular',
-    },
-  ];
+  if (!user) return null;
 
   return (
     <div className="app-container" id="home-page-root">
-      {/* Navbar with Customer Profile & Logout Action */}
-      <Navbar user={user} onLogoutSuccess={handleLogoutSuccess} />
+      <Navbar user={user} onLogoutSuccess={() => setUser(null)} />
 
       <main className="main-content">
         <div className="dashboard-container">
-          {/* Welcome Banner */}
-          <div className="hero-welcome-card" id="welcome-banner">
-            <div className="hero-badge">
-              <Sparkles size={14} />
-              <span>ShopKart Gold Member</span>
+          {/* Hero Banner */}
+          <div className="welcome-banner" style={{ marginBottom: '2rem' }}>
+            <div className="welcome-header">
+              <div>
+                <span className="badge badge-accent">
+                  <Sparkles size={14} /> Engineering Lab 06 — Checkout & Orders Ready
+                </span>
+                <h1 className="welcome-title" style={{ marginTop: '0.75rem' }}>
+                  Welcome back, {user.fullName || 'Shopper'} 👋
+                </h1>
+                <p className="welcome-subtitle">
+                  Explore verified catalog items, manage your cart, and complete your purchase with Razorpay Test Mode checkout.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => navigate('/cart')}
+                  id="hero-view-cart-btn"
+                >
+                  <ShoppingBag size={18} />
+                  <span>Go to Cart</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => navigate('/orders')}
+                  id="hero-view-orders-btn"
+                >
+                  <span>My Orders</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
             </div>
-            <h1 className="hero-title" id="welcome-heading">
-              Welcome back, {user.fullName || 'Valued Customer'}!
-            </h1>
-            <p className="hero-subtitle">
-              Your customer account is securely authenticated. Explore your member perks, manage your profile, and discover today's personalized recommendations.
-            </p>
+
+            {/* Notification alert */}
+            {addedNotice && (
+              <div
+                style={{
+                  marginTop: '1.25rem',
+                  padding: '0.75rem 1.25rem',
+                  background: 'var(--success-light)',
+                  border: '1px solid var(--success-border)',
+                  color: '#065f46',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                }}
+              >
+                <Check size={18} />
+                <span>{addedNotice}</span>
+              </div>
+            )}
           </div>
 
-          {/* Customer Profile & Store Overview Grid */}
-          <div className="dashboard-grid">
-            {/* Customer Details Card (Task 3: Display Name, Email, Phone) */}
-            <div className="profile-card" id="customer-profile-card">
-              <div className="profile-card-header">
-                <div className="profile-big-avatar" id="customer-avatar">
-                  {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'C'}
-                </div>
-                <div>
-                  <h2 className="profile-meta-title" id="display-customer-name">
-                    {user.fullName}
-                  </h2>
-                  <span className="profile-role-tag">Verified Customer</span>
-                </div>
-              </div>
-
-              <div className="profile-info-list">
-                {/* Full Name */}
-                <div className="profile-info-item">
-                  <div className="info-icon-box">
-                    <User size={18} />
-                  </div>
-                  <div className="info-content">
-                    <div className="info-label">Full Name</div>
-                    <div className="info-value" id="profile-fullname">
-                      {user.fullName}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Email Address */}
-                <div className="profile-info-item">
-                  <div className="info-icon-box">
-                    <Mail size={18} />
-                  </div>
-                  <div className="info-content">
-                    <div className="info-label">Email Address</div>
-                    <div className="info-value" id="profile-email">
-                      {user.email}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Phone Number */}
-                <div className="profile-info-item">
-                  <div className="info-icon-box">
-                    <Phone size={18} />
-                  </div>
-                  <div className="info-content">
-                    <div className="info-label">Phone Number</div>
-                    <div className="info-value" id="profile-phone">
-                      {user.phone}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Security / Cookie Verification Badge */}
-                <div className="profile-info-item">
-                  <div className="info-icon-box" style={{ color: 'var(--success)' }}>
-                    <ShieldCheck size={18} />
-                  </div>
-                  <div className="info-content">
-                    <div className="info-label">Authentication Status</div>
-                    <div className="info-value" style={{ color: 'var(--success)', fontSize: '0.85rem' }}>
-                      HttpOnly Cookie Active
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Catalog Filter Controls */}
+          <div className="catalog-toolbar">
+            <div className="search-box">
+              <Search size={18} className="search-icon" />
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search products by title or description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                id="catalog-search-input"
+              />
             </div>
 
-            {/* Store Quick Stats & Featured Deals */}
-            <div className="store-section">
-              {/* Quick Stat Tiles */}
-              <div className="stat-cards-row">
-                <div className="stat-card">
-                  <div className="stat-card-icon" style={{ background: '#eef2ff', color: '#4f46e5' }}>
-                    <Package size={22} />
-                  </div>
-                  <div>
-                    <div className="stat-card-num">3</div>
-                    <div className="stat-card-label">Active Orders</div>
-                  </div>
-                </div>
+            <div className="category-chips">
+              <Filter size={16} style={{ color: 'var(--text-muted)', marginRight: '0.25rem' }} />
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`category-chip ${selectedCategory === cat ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat)}
+                  id={`cat-chip-${cat.toLowerCase()}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                <div className="stat-card">
-                  <div className="stat-card-icon" style={{ background: '#fef2f2', color: '#ef4444' }}>
-                    <Heart size={22} />
-                  </div>
-                  <div>
-                    <div className="stat-card-num">12</div>
-                    <div className="stat-card-label">Wishlist Items</div>
-                  </div>
-                </div>
+          {/* Product Grid */}
+          <div style={{ marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800 }}>
+                {selectedCategory === 'All' ? 'All Products' : `${selectedCategory} Collection`}
+              </h2>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                {products.length} products found
+              </span>
+            </div>
 
-                <div className="stat-card">
-                  <div className="stat-card-icon" style={{ background: '#ecfdf5', color: '#10b981' }}>
-                    <Clock size={22} />
-                  </div>
-                  <div>
-                    <div className="stat-card-num">1,450</div>
-                    <div className="stat-card-label">Reward Points</div>
-                  </div>
-                </div>
+            {loadingProducts ? (
+              <div style={{ padding: '4rem', textAlign: 'center' }}>
+                <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
+                <p style={{ color: 'var(--text-muted)' }}>Loading catalog items...</p>
               </div>
+            ) : products.length === 0 ? (
+              <div className="empty-state-card" id="catalog-empty-state">
+                <ShoppingBag size={48} style={{ color: 'var(--text-light)', marginBottom: '1rem' }} />
+                <h3>No products found</h3>
+                <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '0.5rem auto 1.5rem' }}>
+                  No items matched your filter or search query. Try clearing your search or switching categories.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => { setSelectedCategory('All'); setSearchQuery(''); }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <div className="product-grid" id="products-catalog-grid">
+                {products.map((item) => (
+                  <div key={item._id} className="product-card" id={`product-card-${item._id}`}>
+                    <div className="product-image-wrap">
+                      <img
+                        src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80'}
+                        alt={item.name}
+                        className="product-image"
+                        loading="lazy"
+                      />
+                      <span className="product-category-tag">{item.category}</span>
+                      {item.stock <= 5 && item.stock > 0 && (
+                        <span className="product-stock-tag warning">Only {item.stock} left!</span>
+                      )}
+                      {item.stock === 0 && (
+                        <span className="product-stock-tag out">Out of Stock</span>
+                      )}
+                    </div>
 
-              {/* Curated Products Showcase */}
-              <div>
-                <div className="section-header" style={{ marginBottom: '1rem' }}>
-                  <h3 className="section-title">Trending Member Exclusives</h3>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>
-                    View All Catalog &rarr;
-                  </span>
-                </div>
+                    <div className="product-card-body">
+                      <h3 className="product-card-title" title={item.name}>{item.name}</h3>
+                      <p className="product-card-desc">{item.description}</p>
 
-                <div className="products-grid">
-                  {sampleProducts.map((product) => (
-                    <div className="product-card" key={product.id}>
-                      <div className="product-image-wrap">
-                        <ShoppingBag size={36} />
-                        <span className="product-tag">{product.badge}</span>
-                      </div>
-                      <div className="product-details">
-                        <h4 className="product-title">{product.title}</h4>
-                        <span className="product-category">{product.category}</span>
-                        <div className="product-footer">
-                          <span className="product-price">{product.price}</span>
-                          <button type="button" className="btn btn-primary product-add-btn">
-                            Add to Cart
-                          </button>
+                      <div className="product-card-footer">
+                        <div>
+                          <span className="product-card-label">Price</span>
+                          <div className="product-card-price">₹{item.price.toLocaleString('en-IN')}</div>
                         </div>
+
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          disabled={item.stock === 0 || addingId === item._id}
+                          onClick={() => handleAddToCart(item)}
+                          id={`add-to-cart-${item._id}`}
+                        >
+                          {addingId === item._id ? (
+                            <>
+                              <div className="spinner-sm"></div>
+                              <span>Adding...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingBag size={14} />
+                              <span>{item.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Trust Badges */}
+          <div className="trust-badges-grid" style={{ marginTop: '3.5rem', marginBottom: '2rem' }}>
+            <div className="trust-badge-item">
+              <ShieldCheck size={28} className="trust-icon" />
+              <div>
+                <h4>Razorpay Test Payments</h4>
+                <p>Industry-standard HMAC SHA256 payment signature verification.</p>
+              </div>
+            </div>
+            <div className="trust-badge-item">
+              <Truck size={28} className="trust-icon" />
+              <div>
+                <h4>Fast Order Dispatch</h4>
+                <p>Orders are snapshotted and queued immediately upon verification.</p>
+              </div>
+            </div>
+            <div className="trust-badge-item">
+              <RefreshCw size={28} className="trust-icon" />
+              <div>
+                <h4>Dynamic Cart State</h4>
+                <p>Synchronized global cart state with server-side stock validation.</p>
               </div>
             </div>
           </div>
