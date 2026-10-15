@@ -95,12 +95,22 @@ export default function Cart({ user, setUser }) {
               </div>
               <h2>Your shopping bag is empty</h2>
               <p style={{ color: 'var(--text-muted)', maxWidth: '420px', margin: '0 auto 1.75rem', lineHeight: 1.6 }}>
-                You haven't added any products to your bag yet. Explore our verified catalog and discover items you love.
+                {!user 
+                  ? 'Sign in to access items previously saved in your cart, or start exploring our latest drops!'
+                  : 'You haven\'t added any products to your bag yet. Explore our verified catalog and discover items you love.'
+                }
               </p>
-              <Link to="/products" className="btn btn-primary btn-lg" id="cart-start-shopping-btn">
-                <ShoppingCart size={18} />
-                <span>Start Shopping</span>
-              </Link>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                {!user && (
+                  <Link to="/login" className="btn btn-primary" id="cart-login-btn">
+                    <span>Sign In to Your Account</span>
+                  </Link>
+                )}
+                <Link to="/products" className={`btn ${!user ? 'btn-secondary' : 'btn-primary btn-lg'}`} id="cart-start-shopping-btn">
+                  <ShoppingCart size={18} />
+                  <span>Start Shopping</span>
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="cart-layout-grid">

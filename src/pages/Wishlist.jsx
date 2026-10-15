@@ -23,6 +23,10 @@ export default function Wishlist({ user, setUser }) {
   const [notice, setNotice] = useState(null);
 
   const loadWishlist = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -32,9 +36,7 @@ export default function Wishlist({ user, setUser }) {
       }
     } catch (err) {
       console.error('Failed to load wishlist:', err);
-      if (err.response?.status === 401) {
-        navigate('/login', { replace: true });
-      } else {
+      if (err.response?.status !== 401) {
         setError("We couldn't load your wishlist. Please try again.");
       }
     } finally {
@@ -44,7 +46,7 @@ export default function Wishlist({ user, setUser }) {
 
   useEffect(() => {
     loadWishlist();
-  }, []);
+  }, [user]);
 
   const handleRemove = async (productId) => {
     try {
@@ -143,6 +145,24 @@ export default function Wishlist({ user, setUser }) {
               >
                 <span>Try Again</span>
               </button>
+            </div>
+          ) : !user ? (
+            <div className="empty-state-card" id="wishlist-guest-state">
+              <div className="empty-icon-circle-red">
+                <Heart size={42} style={{ fill: '#ef4444', color: '#ef4444' }} />
+              </div>
+              <h2>Save Your Favorite Drops ❤️</h2>
+              <p style={{ color: 'var(--text-muted)', maxWidth: '420px', margin: '0 auto 1.75rem', lineHeight: 1.6 }}>
+                Sign in to your account to save items to your wishlist, sync across devices, and get restock alerts.
+              </p>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link to="/login" className="btn btn-primary" id="wishlist-login-btn">
+                  <span>Sign In to Access Wishlist</span>
+                </Link>
+                <Link to="/products" className="btn btn-secondary">
+                  <span>Browse Products</span>
+                </Link>
+              </div>
             </div>
           ) : wishlist.length === 0 ? (
             <div className="empty-state-card" id="wishlist-empty-state">

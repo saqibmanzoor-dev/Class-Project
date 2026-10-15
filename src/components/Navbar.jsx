@@ -51,7 +51,7 @@ export default function Navbar({ user, onLogoutSuccess }) {
       <nav className="navbar" id="shopkart-navbar">
         <div className="navbar-inner">
           {/* Brand Logo */}
-          <Link to="/products" className="navbar-brand" id="nav-brand-link">
+          <Link to="/" className="navbar-brand" id="nav-brand-link">
             <div className="brand-icon-box">
               <ShoppingBag size={20} />
             </div>
@@ -61,76 +61,84 @@ export default function Navbar({ user, onLogoutSuccess }) {
             </div>
           </Link>
 
-          {/* Navigation Center Links */}
-          {user && (
-            <div className="navbar-center-links">
-              <Link
-                to="/products"
-                className={`nav-link-item ${location.pathname === '/products' || location.pathname === '/home' ? 'active' : ''}`}
-                id="nav-products-link"
-              >
-                <span>Products</span>
-                <span className="nav-link-indicator"></span>
-              </Link>
-              <Link
-                to="/wishlist"
-                className={`nav-link-item ${location.pathname === '/wishlist' ? 'active' : ''}`}
-                id="nav-wishlist-link"
-              >
-                <span>Wishlist</span>
-                {wishlistCount > 0 && <span className="nav-counter-pill">{wishlistCount}</span>}
-                <span className="nav-link-indicator"></span>
-              </Link>
+          {/* Navigation Center Links (Always visible to browse) */}
+          <div className="navbar-center-links">
+            <Link
+              to="/"
+              className={`nav-link-item ${location.pathname === '/' ? 'active' : ''}`}
+              id="nav-home-link"
+            >
+              <span>Home</span>
+              <span className="nav-link-indicator"></span>
+            </Link>
+            <Link
+              to="/products"
+              className={`nav-link-item ${location.pathname === '/products' ? 'active' : ''}`}
+              id="nav-products-link"
+            >
+              <span>Shop</span>
+              <span className="nav-link-indicator"></span>
+            </Link>
+            <Link
+              to="/wishlist"
+              className={`nav-link-item ${location.pathname === '/wishlist' ? 'active' : ''}`}
+              id="nav-wishlist-link"
+            >
+              <span>Wishlist</span>
+              {wishlistCount > 0 && <span className="nav-counter-pill">{wishlistCount}</span>}
+              <span className="nav-link-indicator"></span>
+            </Link>
+            {user && (
               <Link
                 to="/orders"
                 className={`nav-link-item ${location.pathname === '/orders' ? 'active' : ''}`}
                 id="nav-orders-link"
               >
-                <span>My Orders</span>
+                <span>Orders</span>
                 <span className="nav-link-indicator"></span>
               </Link>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Right Actions */}
           <div className="navbar-right">
+            {/* Wishlist Quick Button */}
+            <Link
+              to="/wishlist"
+              className={`btn-nav-action ${location.pathname === '/wishlist' ? 'active' : ''}`}
+              id="nav-wishlist-btn"
+              title="View Saved Wishlist"
+            >
+              <Heart 
+                size={19} 
+                style={{ 
+                  color: wishlistCount > 0 ? '#ef4444' : 'currentColor', 
+                  fill: wishlistCount > 0 ? '#ef4444' : 'none' 
+                }} 
+              />
+              {wishlistCount > 0 && (
+                <span className="action-badge-dot" id="wishlist-badge-count">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Cart Quick Button with Live Dynamic Count Badge */}
+            <Link
+              to="/cart"
+              className={`btn-nav-action btn-cart-highlight ${location.pathname === '/cart' ? 'active' : ''}`}
+              id="nav-cart-btn"
+              title="View Shopping Cart"
+            >
+              <ShoppingCart size={19} />
+              <span className="action-cart-label">Bag</span>
+              <span className="action-badge-count" id="cart-badge-count">
+                {cartCount}
+              </span>
+            </Link>
+
             {user ? (
               <>
-                {/* Wishlist Quick Button */}
-                <Link
-                  to="/wishlist"
-                  className={`btn-nav-action ${location.pathname === '/wishlist' ? 'active' : ''}`}
-                  id="nav-wishlist-btn"
-                  title="View Saved Wishlist"
-                >
-                  <Heart 
-                    size={19} 
-                    style={{ 
-                      color: wishlistCount > 0 ? '#ef4444' : 'currentColor', 
-                      fill: wishlistCount > 0 ? '#ef4444' : 'none' 
-                    }} 
-                  />
-                  {wishlistCount > 0 && (
-                    <span className="action-badge-dot" id="wishlist-badge-count">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </Link>
-
-                {/* Cart Quick Button with Live Dynamic Count Badge */}
-                <Link
-                  to="/cart"
-                  className={`btn-nav-action btn-cart-highlight ${location.pathname === '/cart' ? 'active' : ''}`}
-                  id="nav-cart-btn"
-                  title="View Shopping Cart"
-                >
-                  <ShoppingCart size={19} />
-                  <span className="action-cart-label">Bag</span>
-                  <span className="action-badge-count" id="cart-badge-count">
-                    {cartCount}
-                  </span>
-                </Link>
-
                 {/* User Identity Chip (Clickable to view profile popup) */}
                 <button
                   type="button"
@@ -146,7 +154,7 @@ export default function Navbar({ user, onLogoutSuccess }) {
                   </div>
                   <div className="user-info-text">
                     <span className="user-name-short">{user.fullName || 'Shopper'}</span>
-                    <span className="user-verified-badge">View Profile</span>
+                    <span className="user-verified-badge">Profile</span>
                   </div>
                 </button>
 
@@ -164,12 +172,12 @@ export default function Navbar({ user, onLogoutSuccess }) {
                 </button>
               </>
             ) : (
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
                 <Link to="/login" className="btn btn-secondary btn-sm" id="nav-login-btn">
-                  Log In
+                  Sign In
                 </Link>
                 <Link to="/register" className="btn btn-primary btn-sm" id="nav-register-btn">
-                  Sign Up
+                  Register
                 </Link>
               </div>
             )}

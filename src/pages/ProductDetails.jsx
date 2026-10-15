@@ -66,6 +66,11 @@ export default function ProductDetails({ user, setUser }) {
 
   const handleAddToCart = async () => {
     if (!product) return;
+    if (!user) {
+      setCartSuccessNotice(`Please sign in to add "${product.name}" to your bag.`);
+      setTimeout(() => setCartSuccessNotice(null), 4000);
+      return;
+    }
     try {
       setAddingToCart(true);
       const res = await addItem(product._id, quantity);
@@ -82,6 +87,11 @@ export default function ProductDetails({ user, setUser }) {
 
   const handleToggleWishlist = async () => {
     if (!product) return;
+    if (!user) {
+      setCartSuccessNotice(`Please sign in to save "${product.name}" to your wishlist.`);
+      setTimeout(() => setCartSuccessNotice(null), 4000);
+      return;
+    }
     try {
       setWishlistLoading(true);
       await toggleItemInWishlist(product._id);
