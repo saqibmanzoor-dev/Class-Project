@@ -9,12 +9,13 @@ const productSchema = new mongoose.Schema(
     },
     description: {
       type: String,
+      required: [true, "Product description is required"],
       trim: true,
     },
     price: {
       type: Number,
       required: [true, "Product price is required"],
-      min: [0, "Price cannot be negative"],
+      min: [0.01, "Price must be greater than 0"],
     },
     category: {
       type: String,
@@ -23,7 +24,8 @@ const productSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      default: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80",
+      required: [true, "Product image is required"],
+      trim: true,
     },
     stock: {
       type: Number,

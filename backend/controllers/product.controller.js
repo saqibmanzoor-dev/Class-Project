@@ -94,20 +94,45 @@ const createProduct = async (req, res) => {
   try {
     const { name, description, price, category, image, stock } = req.body;
 
-    if (!name || price === undefined || !category) {
+    // 1. Check all required fields
+    if (
+      !name ||
+      !description ||
+      price === undefined ||
+      !category ||
+      !image
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Name, price, and category are required",
+        message: "All fields (name, description, price, category, image) are required",
+      });
+    }
+
+    // 2. Validate price > 0
+    const numPrice = Number(price);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid price: Price must be greater than 0",
+      });
+    }
+
+    // 3. Validate stock >= 0
+    const numStock = stock !== undefined ? Number(stock) : 0;
+    if (isNaN(numStock) || numStock < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid stock: Stock cannot be negative",
       });
     }
 
     const product = new Product({
-      name,
-      description,
-      price: Number(price),
-      category,
-      image,
-      stock: stock !== undefined ? Number(stock) : 10,
+      name: String(name).trim(),
+      description: String(description).trim(),
+      price: numPrice,
+      category: String(category).trim(),
+      image: String(image).trim(),
+      stock: numStock,
     });
 
     await product.save();
@@ -119,6 +144,12 @@ const createProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating product:", error);
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
     return res.status(500).json({
       success: false,
       message: error.message || "Server error while creating product",

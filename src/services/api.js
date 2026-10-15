@@ -57,6 +57,11 @@ export const logoutCustomer = async () => {
   }
 };
 
+export const changePassword = async (passwords) => {
+  const response = await api.patch('/customers/change-password', passwords);
+  return response.data;
+};
+
 // -------------------------------------------------------------
 // Product Catalog APIs (Lab 03)
 // -------------------------------------------------------------
@@ -67,6 +72,29 @@ export const getProducts = async (params = {}) => {
 
 export const getProductById = async (id) => {
   const response = await api.get(`/products/${id}`);
+  return response.data;
+};
+
+// -------------------------------------------------------------
+// Wishlist APIs (Lab 04)
+// -------------------------------------------------------------
+export const getWishlist = async () => {
+  const response = await api.get('/wishlist');
+  return response.data;
+};
+
+export const addToWishlist = async (productId) => {
+  const response = await api.post(`/wishlist/${productId}`);
+  return response.data;
+};
+
+export const removeFromWishlist = async (productId) => {
+  const response = await api.delete(`/wishlist/${productId}`);
+  return response.data;
+};
+
+export const toggleWishlist = async (productId) => {
+  const response = await api.patch(`/wishlist/${productId}/toggle`);
   return response.data;
 };
 
