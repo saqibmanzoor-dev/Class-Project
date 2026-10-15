@@ -6,9 +6,13 @@ const jwt = require("jsonwebtoken");
  * @returns {string} Signed JWT string
  */
 const generateToken = (customerId) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not configured");
+  }
+
   return jwt.sign(
     { id: customerId },
-    process.env.JWT_SECRET || "shopkart_super_secret_jwt_key_2026",
+    process.env.JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRES_IN || "7d",
     }

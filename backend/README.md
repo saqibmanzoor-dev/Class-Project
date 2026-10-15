@@ -48,7 +48,7 @@ The `.env` file is pre-configured:
 ```env
 PORT=5000
 MONGO_URI=mongodb+srv://sakibmanzoor2380_db_user:1234567890@cluster0.llcxtyg.mongodb.net/shopkart?retryWrites=true&w=majority
-JWT_SECRET=shopkart_super_secret_jwt_key_2026
+JWT_SECRET=replace_with_a_secure_random_secret
 JWT_EXPIRES_IN=7d
 NODE_ENV=development
 ```

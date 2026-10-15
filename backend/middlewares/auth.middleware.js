@@ -22,12 +22,18 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // 2. Verify token
+    // 2. Require the JWT secret to be configured.
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET environment variable is not configured");
+      return res.status(500).json({ success: false, message: "Server authentication is not configured" });
+    }
+
+    // 3. Verify token
     let decoded;
     try {
       decoded = jwt.verify(
         token,
-        process.env.JWT_SECRET || "shopkart_super_secret_jwt_key_2026"
+        process.env.JWT_SECRET
       );
     } catch (err) {
       return res.status(401).json({

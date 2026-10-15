@@ -1,10 +1,4 @@
-let bcrypt;
-try {
-  bcrypt = require("bcrypt");
-  if (!bcrypt.hash) throw new Error("bcrypt native not available");
-} catch (e) {
-  bcrypt = require("bcryptjs");
-}
+const bcrypt = require("bcryptjs");
 
 const Customer = require("../models/customer.model");
 const { generateToken, cookieOptions } = require("../utils/generateToken");
